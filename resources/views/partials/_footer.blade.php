@@ -4,13 +4,10 @@
             <a href="{{ url('/') }}" class="navbar-brand font-weight-bold text-primary m-0 mb-4 p-0"
                 style="font-size: 40px; line-height: 40px">
                 <i class="flaticon-043-teddy-bear"></i>
-                <span class="text-white">KidKinder</span>
+                <span class="text-white">Hello English</span>
             </a>
             <p>
-                Labore dolor amet ipsum ea, erat sit ipsum duo eos.
-                Volup amet ea dolor et magna dolor, elitr rebum duo est
-                sed diam elitr. Stet elitr stet diam duo eos rebum ipsum
-                diam ipsum elitr.
+                Hello English is a web-based learning platform designed to help users improve students English skills through interactive lessons and engaging content.
             </p>
             <!-- Sosial Button -->
             <!-- <div class="d-flex justify-content-start mt-4">
@@ -24,7 +21,7 @@
                     style="width: 38px; height: 38px" href="#"><i class="fab fa-instagram"></i></a>
             </div> -->
         </div>
-        <div class="col-lg-3 col-md-6 mb-5">
+        <div class="col-lg-3 col-md-6 mb-5 ml-5">
             <h3 class="text-primary mb-4">Get In Touch</h3>
             <div class="d-flex">
                 <h4 class="fa fa-map-marker-alt text-primary"></h4>
