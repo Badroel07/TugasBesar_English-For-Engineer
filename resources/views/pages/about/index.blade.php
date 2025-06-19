@@ -44,8 +44,8 @@
                             {{-- Saya hapus inline style width dan height karena img-fluid dan rounded-circle sudah cukup --}}
                             <img class="img-fluid rounded-circle mb-3" src="{{ asset('img/anggota/chikal.jpg') }}" alt="Foto Orang 3">
                         </a>
-                        <h5>Nama Orang 3</h5>
-                        <span>Jabatan 3</span>
+                        <h5>Muhamad Chikal Ubaidillah Nurhasan</h5>
+                        <span>2306158</span>
                     </div>
                 </div>
 
