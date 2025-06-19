@@ -21,7 +21,7 @@
 </p> {{-- Beri ID agar bisa diakses JS --}}
 
         <hr>
-        <p>Setelah membaca cerita di atas, jawablah pertanyaan-pertanyaan berikut:</p>
+        <p>After reading the story above, answer the following questions:</p>
 
         {{-- AREA BARU UNTUK SOAL DAN JAWABAN --}}
         <div id="questions-area">
