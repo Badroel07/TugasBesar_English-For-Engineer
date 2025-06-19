@@ -12,63 +12,20 @@
     </div>
 </div>
 <div class="mb-5">
-        <!-- Elemen tersembunyi yang menyimpan NAMA FILE cerita untuk dibaca JS -->
-            <div id="story-info" data-story-file="{{ $storyFileName }}" style="display:none;"></div> 
+    <div id="story-info" data-story-file="{{ $storyFileName }}" style="display:none;"></div> 
     <img class="img-fluid rounded w-100 mb-4" src="{{asset('img/detail.jpg')}}" alt="Image" />
-<p id="story-content" style="text-align: justify;" line-height="1.5">
-    {{-- Konten cerita akan dimuat di sini oleh JavaScript --}}
-    Loading story content...
-</p> {{-- Beri ID agar bisa diakses JS --}}
+    <div id="story-loading-spinner" class="loading-spinner"></div>
+    <p id="story-content" style="text-align: justify; line-height: 1.5; display: none;">
+        {{-- Konten cerita akan dimuat di sini oleh JavaScript --}}
+    </p> 
 
-        <hr>
-        <p>After reading the story above, answer the following questions:</p>
+    <hr>
+    <p>After reading the story above, answer the following questions:</p>
 
-        {{-- AREA BARU UNTUK SOAL DAN JAWABAN --}}
-        <div id="questions-area">
-            <p>Loading questions...</p>
-        </div>
-        {{-- AKHIR AREA BARU UNTUK SOAL DAN JAWABAN --}}
-</div>
-
-<!-- Related Post
-<div class="mb-5 mx-n3">
-    <h2 class="mb-4 ml-3">Related Post</h2>
-    <div class="owl-carousel post-carousel position-relative">
-        <div class="d-flex align-items-center bg-light shadow-sm rounded overflow-hidden mx-3">
-            <img class="img-fluid" src="img/post-1.jpg" style="width: 80px; height: 80px" />
-            <div class="pl-3">
-                <h5 class="">Diam amet eos at no eos</h5>
-                <div class="d-flex">
-                    <small class="mr-3"><i class="fa fa-user text-primary"></i> Admin</small>
-                    <small class="mr-3"><i class="fa fa-folder text-primary"></i> Web
-                        Design</small>
-                    <small class="mr-3"><i class="fa fa-comments text-primary"></i> 15</small>
-                </div>
-            </div>
-        </div>
-        <div class="d-flex align-items-center bg-light shadow-sm rounded overflow-hidden mx-3">
-            <img class="img-fluid" src="img/post-2.jpg" style="width: 80px; height: 80px" />
-            <div class="pl-3">
-                <h5 class="">Diam amet eos at no eos</h5>
-                <div class="d-flex">
-                    <small class="mr-3"><i class="fa fa-user text-primary"></i> Admin</small>
-                    <small class="mr-3"><i class="fa fa-folder text-primary"></i> Web
-                        Design</small>
-                    <small class="mr-3"><i class="fa fa-comments text-primary"></i> 15</small>
-                </div>
-            </div>
-        </div>
-        <div class="d-flex align-items-center bg-light shadow-sm rounded overflow-hidden mx-3">
-            <img class="img-fluid" src="img/post-3.jpg" style="width: 80px; height: 80px" />
-            <div class="pl-3">
-                <h5 class="">Diam amet eos at no eos</h5>
-                <div class="d-flex">
-                    <small class="mr-3"><i class="fa fa-user text-primary"></i> Admin</small>
-                    <small class="mr-3"><i class="fa fa-folder text-primary"></i> Web
-                        Design</small>
-                    <small class="mr-3"><i class="fa fa-comments text-primary"></i> 15</small>
-                </div>
-            </div>
-        </div>
+    {{-- AREA BARU UNTUK SOAL DAN JAWABAN --}}
+    <div id="questions-area">
+        <div id="questions-loading-spinner" class="loading-spinner"></div>
+        <p id="questions-content" style="display: none;">Loading questions...</p>
     </div>
-</div> -->
+    {{-- AKHIR AREA BARU UNTUK SOAL DAN JAWABAN --}}
+</div>

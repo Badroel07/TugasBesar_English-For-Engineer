@@ -10,3 +10,4 @@
 <!-- Template Javascript -->
 <script src="{{ asset('js/main.js') }}"></script>
 <script src="{{ asset('js/soal.js') }}"></script>
+<script src="{{ asset('js/loading.js') }}"></script>

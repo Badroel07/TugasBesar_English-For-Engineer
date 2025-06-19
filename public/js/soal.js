@@ -1,64 +1,99 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Variabel Global untuk Quiz ---
-    const storyInfoElement = document.getElementById('story-info'); // Elemen tersembunyi untuk mengambil nama file cerita
-    const storyContentElement = document.getElementById('story-content'); // Elemen untuk menampilkan konten cerita yang dimuat
+    // --- Variabel Global untuk Quiz dan Elemen DOM ---
+    const storyInfoElement = document.getElementById('story-info'); 
+    const storyContentElement = document.getElementById('story-content'); 
+    const storyLoadingSpinner = document.getElementById('story-loading-spinner');
+
     const questionsArea = document.getElementById('questions-area');
+    // questionsContent tidak perlu di sini karena questionsArea akan diisi langsung dengan form
+    const questionsLoadingSpinner = document.getElementById('questions-loading-spinner');
+
     let generatedQuestions = []; // Untuk menyimpan soal yang di-generate
 
+    // --- Cek apakah elemen-elemen penting ditemukan ---
+    if (!storyInfoElement || !storyContentElement || !storyLoadingSpinner || !questionsArea || !questionsLoadingSpinner) {
+        console.error("Salah satu atau lebih elemen DOM penting tidak ditemukan. Pastikan ID HTML sudah benar.");
+        // Anda bisa menampilkan pesan error yang lebih user-friendly di sini
+        if (!storyContentElement) { /* tampilkan pesan error */ }
+        if (!questionsArea) { /* tampilkan pesan error */ }
+        return; // Hentikan eksekusi skrip jika elemen penting tidak ada
+    }
 
-    // Fungsi untuk memuat soal dari backend
-    async function loadQuestions() {
-        const storyFileName = storyInfoElement ? storyInfoElement.dataset.storyFile : '';
+    // Fungsi untuk memuat cerita dan menghasilkan soal
+    async function loadStoryAndQuestions() {
+        const storyFileName = storyInfoElement.dataset.storyFile; // storyInfoElement dijamin ada karena cek di atas
 
         if (!storyFileName) {
-             console.error("Nama file cerita tidak ditemukan di elemen 'story-info'. Pastikan atribut data-story-file ada dan berisi nama file.");
-             questionsArea.innerHTML = '<p class="text-danger">Error: Nama file cerita tidak dapat ditemukan. Mohon hubungi administrator.</p>';
-             return;
+            console.error("Nama file cerita tidak ditemukan di elemen 'story-info'. Pastikan atribut data-story-file ada dan berisi nama file.");
+            questionsArea.innerHTML = '<p class="text-danger">Error: Nama file cerita tidak dapat ditemukan. Mohon hubungi administrator.</p>';
+            return;
         }
 
-        storyContentElement.textContent = 'Loading story content...'; // Tampilkan pesan loading cerita
-        questionsArea.innerHTML = '<p>Generating HOTS questions...</p>'; // Tampilkan pesan loading pertanyaan
+        // --- Tampilkan Spinner Cerita dan Sembunyikan Konten Cerita ---
+        storyLoadingSpinner.style.display = 'block'; 
+        storyContentElement.style.display = 'none';
+
+        // --- Tampilkan Spinner Pertanyaan dan Kosongkan Area Pertanyaan (kecuali spinner) ---
+        // Penting: Jangan kosongkan questionsArea.innerHTML dulu, karena spinner ada di dalamnya.
+        // Cukup pastikan spinner terlihat dan tidak ada konten lain.
+        questionsLoadingSpinner.style.display = 'block';
+        questionsArea.innerHTML = '<div id="questions-loading-spinner" class="loading-spinner"></div>'; // Re-insert spinner, will be removed later
+        // Note: Cara yang lebih baik adalah dengan menyembunyikan elemen <p id="questions-content">
+        // dan memastikan spinner adalah satu-satunya yang terlihat di questionsArea pada awalnya.
 
         let story = '';
         try {
             // Langkah 1: Ambil konten cerita dari backend
-            const storyResponse = await fetch('/get-story-file-content', { // Memanggil API baru untuk mengambil konten file
+            const storyResponse = await fetch('/get-story-file-content', { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ file_name: storyFileName }) // Mengirim nama file
+                body: JSON.stringify({ file_name: storyFileName }) 
             });
 
             if (!storyResponse.ok) {
-                // Coba parse body respons untuk detail error dari backend jika ada
                 const errorData = await storyResponse.json().catch(() => ({})); 
                 throw new Error(`HTTP error fetching story: Status ${storyResponse.status} - ${storyResponse.statusText}. Details: ${JSON.stringify(errorData)}`);
             }
             const storyData = await storyResponse.json();
             if (storyData.storyContent) {
                 story = storyData.storyContent;
-                storyContentElement.textContent = story; // Tampilkan cerita di elemen p#story-content
+                storyContentElement.innerHTML = story; 
             } else {
                 throw new Error('Story content not found in response from backend.');
             }
 
         } catch (storyError) {
             console.error('Error fetching story content:', storyError);
-            storyContentElement.textContent = `Error loading story: ${storyError.message}`;
+            storyContentElement.innerHTML = `<p class="text-danger">Error loading story: ${storyError.message}</p>`;
             questionsArea.innerHTML = `<p class="text-danger">Error loading story content: ${storyError.message}</p>`;
+            
+            // Sembunyikan spinner cerita dan tampilkan konten (pesan error)
+            storyLoadingSpinner.style.display = 'none';
+            storyContentElement.style.display = 'block';
+            
+            // Sembunyikan spinner pertanyaan juga jika cerita gagal dimuat
+            questionsLoadingSpinner.style.display = 'none';
+            // Bersihkan sisa spinner jika ada di questionsArea.innerHTML
+            questionsArea.innerHTML = questionsArea.innerHTML.replace('<div id="questions-loading-spinner" class="loading-spinner"></div>', '');
             return; // Hentikan eksekusi jika cerita gagal dimuat
+        } finally {
+            // Pastikan spinner cerita disembunyikan setelah percobaan loading cerita selesai
+            storyLoadingSpinner.style.display = 'none';
+            storyContentElement.style.display = 'block';
         }
 
         // Lanjutkan dengan menghasilkan pertanyaan hanya jika cerita berhasil dimuat
-        if (story.length < 50) { // Tambahkan cek minimal panjang story untuk generate
+        if (story.length < 50) { 
             questionsArea.innerHTML = '<p class="text-warning">Cerita terlalu pendek untuk menghasilkan pertanyaan.</p>';
+            questionsLoadingSpinner.style.display = 'none'; // Sembunyikan spinner pertanyaan
             return;
         }
 
         try {
-            const response = await fetch('/generate-questions', { // Panggil endpoint generate questions Anda
+            const response = await fetch('/generate-questions', { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Backend error generating questions:', data.questions[0].error);
                 } else {
                     generatedQuestions = data.questions; 
-                    displayQuestions(generatedQuestions);
+                    displayQuestions(generatedQuestions); // Panggil fungsi untuk menampilkan formulir kuis
                 }
             } else {
                 questionsArea.innerHTML = '<p class="text-danger">Failed to load questions. Invalid response format from AI.</p>';
@@ -90,6 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading questions:', error);
             questionsArea.innerHTML = `<p class="text-danger">Error generating questions: ${error.message}. Please try refreshing the page.</p>`;
+        } finally {
+            // Sembunyikan spinner pertanyaan setelah proses generate selesai (baik sukses atau error)
+            questionsLoadingSpinner.style.display = 'none';
         }
     }
 
@@ -115,49 +153,57 @@ document.addEventListener('DOMContentLoaded', function() {
         html += `
             <button type="submit" class="btn btn-primary">Submit Answers</button>
         </form>`;
-        questionsArea.innerHTML = html;
+        questionsArea.innerHTML = html; // Ini akan mengganti seluruh isi questionsArea
 
         document.getElementById('question-form').addEventListener('submit', handleAnswerSubmission);
     }
 
     // Fungsi untuk menangani submit jawaban dan mengirim ke backend
     async function handleAnswerSubmission(event) {
-    event.preventDefault(); 
+        event.preventDefault(); 
 
-    const story = storyContentElement.textContent.trim(); // Ambil cerita dari elemen yang sudah diisi oleh loadQuestions
-    const userAnswers = [];
-    let allAnswersFilled = true; 
+        const story = storyContentElement.textContent.trim(); 
+        const userAnswers = [];
+        let allAnswersFilled = true; 
 
-    document.querySelectorAll('.user-answer-input').forEach(input => {
-        const answer = input.value.trim();
-        userAnswers.push(answer);
-        if (answer === "") {
-            allAnswersFilled = false; 
-        }
-    });
-
-    if (!allAnswersFilled) {
-        questionsArea.innerHTML = '<p class="text-danger">Please fill all answers before submitting.</p>' + questionsArea.innerHTML; 
-        return; 
-    }
-
-    questionsArea.innerHTML = '<p>Analyzing your answers...</p>'; 
-
-    console.log("User Answers collected:", userAnswers); 
-
-    try {
-        const response = await fetch('/analyze-answers', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ 
-                story: story, 
-                questions: generatedQuestions, 
-                userAnswers: userAnswers 
-            })
+        document.querySelectorAll('.user-answer-input').forEach(input => {
+            const answer = input.value.trim();
+            userAnswers.push(answer);
+            if (answer === "") {
+                allAnswersFilled = false; 
+            }
         });
+
+        if (!allAnswersFilled) {
+            const warningDiv = document.createElement('div');
+            warningDiv.classList.add('alert', 'alert-danger', 'mt-3');
+            warningDiv.textContent = 'Please fill all answers before submitting.';
+            questionsArea.prepend(warningDiv); 
+            setTimeout(() => warningDiv.remove(), 3000); 
+            return; 
+        }
+
+        // --- Tampilkan Spinner Pertanyaan Saat Analisis Jawaban ---
+        // Sembunyikan formulir dan tampilkan spinner
+        questionsArea.innerHTML = '<div id="questions-loading-spinner" class="loading-spinner"></div><p class="text-info mt-3">Analyzing your answers...</p>';
+        questionsLoadingSpinner.style.display = 'block';
+
+
+        console.log("User Answers collected:", userAnswers); 
+
+        try {
+            const response = await fetch('/analyze-answers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ 
+                    story: story, 
+                    questions: generatedQuestions, 
+                    userAnswers: userAnswers 
+                })
+            });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({})); 
@@ -181,6 +227,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error submitting answers:', error);
             questionsArea.innerHTML = `<p class="text-danger">Error submitting answers: ${error.message}. Please try again.</p>`;
+        } finally {
+            questionsLoadingSpinner.style.display = 'none'; // Sembunyikan spinner setelah analisis
         }
     }
 
@@ -242,12 +290,10 @@ document.addEventListener('DOMContentLoaded', function() {
         questionsArea.innerHTML = resultsHtml;
     }
 
-    // Panggil fungsi untuk memuat soal saat halaman dimuat
-    // Pastikan storyInfoElement ada dan berisi nama file.
+    // Panggil fungsi utama untuk memuat cerita dan pertanyaan saat halaman dimuat
     if (storyInfoElement) {
-        // Beri sedikit delay untuk memastikan storyInfoElement sudah terisi penuh jika ada rendering dinamis
         setTimeout(() => {
-            loadQuestions(); // Panggil loadQuestions untuk memulai proses
+            loadStoryAndQuestions(); // Panggil fungsi yang sudah digabungkan
         }, 100); 
     }
 });
