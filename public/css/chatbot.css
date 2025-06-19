@@ -1,0 +1,131 @@
+ /* Styling CSS untuk Chatbot */
+    #chatbot-container {
+        position: fixed; /* Membuat chatbot tetap di posisi tertentu */
+        bottom: 20px;    /* 20px dari bawah */
+        right: 20px;     /* 20px dari kanan */
+        width: 350px;    /* Lebar chatbot */
+        height: 450px;   /* Tinggi chatbot */
+        background-color: #f8f9fa; /* Warna latar belakang */
+        border: 1px solid #dee2e6; /* Border */
+        border-radius: 8px; /* Sudut membulat */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Efek bayangan */
+        display: flex;   /* Menggunakan Flexbox untuk tata letak internal */
+        flex-direction: column; /* Konten disusun vertikal */
+        overflow: hidden; /* Sembunyikan konten yang meluap */
+        z-index: 1000;   /* Pastikan chatbot di atas elemen lain */
+        font-family: Arial, sans-serif; /* Font default */
+    }
+
+    #chatbot-header {
+        background-color: #007bff; /* Warna biru untuk header (sesuai Bootstrap primary) */
+        color: white; /* Warna teks putih */
+        padding: 10px 15px; /* Padding di dalam header */
+        font-size: 1.1em; /* Ukuran font header */
+        font-weight: bold; /* Teks tebal */
+        display: flex;
+        justify-content: space-between; /* Judul dan tombol toggle terpisah */
+        align-items: center; /* Rata tengah secara vertikal */
+        cursor: pointer; /* Kursor berubah jadi pointer saat diarahkan ke header */
+    }
+
+    #chatbot-messages {
+        flex-grow: 1; /* Biarkan area pesan mengisi sisa ruang */
+        padding: 15px; /* Padding di dalam area pesan */
+        overflow-y: auto; /* Aktifkan scroll vertikal jika pesan terlalu banyak */
+        background-color: #e9ecef; /* Warna latar belakang area pesan */
+        display: flex; /* Gunakan flexbox untuk pesan agar bisa rata kanan/kiri */
+        flex-direction: column; /* Pesan disusun vertikal */
+    }
+
+    .chat-message {
+        margin-bottom: 10px; /* Jarak antar pesan */
+        padding: 8px 12px; /* Padding di dalam pesan */
+        border-radius: 15px; /* Sudut membulat untuk bubble chat */
+        max-width: 80%; /* Batasi lebar pesan */
+        word-wrap: break-word; /* Pesan panjang akan otomatis wrap */
+    }
+
+    .chat-message.user {
+        background-color: #d1e7dd; /* Warna hijau terang untuk pesan pengguna */
+        align-self: flex-end; /* Pesan pengguna rata kanan */
+        margin-left: auto; /* Memastikan rata kanan */
+        text-align: right; /* Teks rata kanan */
+    }
+
+    .chat-message.bot {
+        background-color: #e0f7fa; /* Warna biru terang untuk pesan bot */
+        align-self: flex-start; /* Pesan bot rata kiri */
+        margin-right: auto; /* Memastikan rata kiri */
+    }
+
+    #chatbot-input-area {
+        display: flex; /* Gunakan flexbox untuk input dan tombol kirim */
+        padding: 10px 15px; /* Padding di area input */
+        border-top: 1px solid #dee2e6; /* Garis di atas area input */
+        background-color: #f8f9fa; /* Warna latar belakang area input */
+    }
+
+    #chatbot-input {
+        flex-grow: 1; /* Input field akan mengisi sebagian besar ruang */
+        padding: 8px; /* Padding di dalam input */
+        border: 1px solid #ced4da; /* Border input */
+        border-radius: 5px; /* Sudut membulat input */
+        margin-right: 10px; /* Jarak antara input dan tombol */
+    }
+
+    #chatbot-send-button {
+        background-color: #007bff; /* Warna tombol kirim */
+        color: white; /* Warna teks tombol */
+        border: none; /* Tanpa border */
+        padding: 8px 15px; /* Padding tombol */
+        border-radius: 5px; /* Sudut membulat tombol */
+        cursor: pointer; /* Kursor berubah jadi pointer */
+    }
+    #chatbot-send-button:hover {
+        background-color: #0056b3; /* Warna tombol saat hover */
+    }
+
+    /* Styling untuk kondisi tersembunyi (chatbot minimized) */
+    #chatbot-container.hidden {
+        height: 50px; /* Hanya header yang terlihat */
+        overflow: hidden; /* Sembunyikan konten lain */
+    }
+    #chatbot-container.hidden #chatbot-messages,
+    #chatbot-container.hidden #chatbot-input-area {
+        display: none; /* Sembunyikan area pesan dan input */
+    }
+    #typing-indicator {
+        background-color: #e0f7fa; /* Warna latar belakang sama seperti pesan bot */
+        align-self: flex-start;
+        margin-right: auto;
+        width: fit-content; /* Sesuaikan lebar dengan konten */
+        padding: 8px 12px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+        display: flex; /* Untuk animasi titik */
+        justify-content: center;
+        align-items: center;
+    }
+
+    .dot {
+        font-size: 1.5em; /* Ukuran titik */
+        line-height: 1;
+        animation: bounce 1s infinite; /* Animasi bouncing */
+        opacity: 0; /* Sembunyikan default */
+        margin: 0 1px; /* Jarak antar titik */
+    }
+
+    .dot:nth-child(1) { animation-delay: 0s; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+            opacity: 0;
+        }
+        50% {
+            transform: translateY(-5px);
+            opacity: 1;
+        }
+    }
