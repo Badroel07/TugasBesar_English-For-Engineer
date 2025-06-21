@@ -44,7 +44,7 @@ class MateriController extends Controller
         }
 
         try {
-            $prompt = "Based on the following story, generate 5 HOTS (Higher-Order Thinking Skills) questions in English. Ensure the questions require analysis, synthesis, or evaluation, not just recall. For each question, provide a brief expected answer or key points.\n\nStory:\n\"\"\"" . $story . "\"\"\"\n\nQuestions (format as JSON array of objects, each with 'question' and 'key_answer' properties):";
+            $prompt = "Based on the following story, generate 5 HOTS (Higher-Order Thinking Skills) questions in English (DO NOT TOO DIFFICULT). Ensure the questions require analysis, synthesis, or evaluation, not just recall. For each question, provide a brief expected answer or key points.\n\nStory:\n\"\"\"" . $story . "\"\"\"\n\nQuestions (format as JSON array of objects, each with 'question' and 'key_answer' properties):";
 
             $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/{$this->geminiModel}:generateContent?key={$this->geminiApiKey}", [
                 'contents' => [
@@ -111,47 +111,63 @@ class MateriController extends Controller
      * Story, questions, and user answers are expected in the request body.
      * Returns a JSON response containing the analysis results or an error.
      */
-       // METHOD BARU UNTUK MENGANALISIS JAWABAN PENGGUNA
     public function analyzeAnswers(Request $request)
     {
         $story = $request->input('story');
-        $questions = $request->input('questions'); // Array pertanyaan dari frontend
-        $userAnswers = $request->input('userAnswers'); // Array jawaban pengguna dari frontend
+        $questions = $request->input('questions'); // Array of questions from frontend
+        $userAnswers = $request->input('userAnswers'); // Array of user answers from frontend
 
-        $analysisResult = "Gagal menganalisis jawaban.";
+        $analysisResult = "Failed to analyze answers.";
 
         if (!$this->geminiApiKey) {
-            Log::error('GEMINI_API_KEY tidak diatur untuk analisis jawaban.');
-            return response()->json(['analysis' => $analysisResult, 'error' => 'Kunci API tidak dikonfigurasi.'], 500);
+            Log::error('GEMINI_API_KEY is not set for answer analysis.');
+            return response()->json(['analysis' => $analysisResult, 'error' => 'API key is not configured.'], 500);
         }
 
         if (empty($story) || empty($questions) || empty($userAnswers)) {
-            return response()->json(['analysis' => 'Data tidak lengkap untuk analisis.'], 400);
+            return response()->json(['analysis' => 'Incomplete data for analysis.'], 400);
         }
 
         try {
-            $prompt = "Anda adalah asisten AI yang dirancang untuk mengevaluasi jawaban siswa secara ketat.
-            Berdasarkan cerita, pertanyaan, dan jawaban yang diharapkan yang diberikan berikut ini, analisis setiap jawaban pengguna.
-            
-            **Kriteria Evaluasi:**
-            - **Benar:** Jawaban pengguna akurat, lengkap, dan langsung menjawab pertanyaan berdasarkan cerita dan jawaban yang diharapkan.
-            - **Sebagian Benar:** Jawaban pengguna mengandung beberapa elemen yang benar tetapi tidak lengkap, samar, atau mengandung ketidakakuratan kecil.
-            - **Salah:** Jawaban pengguna sebagian besar salah, tidak relevan, atau bertentangan dengan informasi dalam cerita atau jawaban yang diharapkan.
-            
-            **Instruksi:**
-            - Bersikaplah ketat dalam evaluasi Anda. Jika jawaban tidak sepenuhnya benar, tandai sebagai 'Sebagian Benar' atau 'Salah'.
-            - Berikan penjelasan singkat namun jelas untuk penilaian Anda, khususnya sebutkan *mengapa* itu benar, sebagian benar, atau salah, merujuk pada cerita atau jawaban yang diharapkan jika berlaku.
-            - Format respons Anda sebagai array JSON objek.
+            // Start building the prompt with overall instructions and the story
+            $prompt = "You are an AI assistant designed to provide an **STRICT** evaluation of student answers.
+            Your task is to analyze each user answer **ABSOLUTELY INDIVIDUALLY and SOLELY AGAINST** the **exact specific question** it corresponds to. General story knowledge IS NOT to be used for validation if the answer does not directly address the question's specifics.
 
-            Cerita:\n\"\"\"" . $story . "\"\"\"\n\nPertanyaan dan Jawaban Pengguna:\n";
+            **EXTREMELY STRICT Evaluation Criteria (Adhere to these definitions only):**
+            - **Correct:** The user's answer MUST be 99% ACCURATE, and DIRECTLY address THIS SPECIFIC question's intent according to the story and the question.
+            - **Partially Correct:** (This status should be used **EXTREMELY RARELY**. If there is any ambiguity or significant missing information, default to 'Incorrect'.) This status applies only if a user's answer is *almost* perfect but has a single, minor, unambiguous, and easily identifiable flaw that does not fundamentally change the core meaning for THIS SPECIFIC QUESTION. For example, a typo that does not change the meaning.
+            - **Incorrect:** This is the default status for almost all non-'Correct' answers. The user's answer is largely WRONG for THIS QUESTION, completely irrelevant to THIS QUESTION's intent, contradicts information in the story specific to THIS QUESTION, or CLEARLY DOES NOT MATCH the expected answer for THIS QUESTION in any significant way. This includes answers that are broadly true to the story but do not specifically and precisely answer *this exact question*. Any deviation, vagueness, or attempt to generalize from the story where specificity is required, will result in 'Incorrect'.
+
+            **ABSOLUTE CRITICAL Instructions - Adhere Without Exception:**
+            - Short but correct answers are allowed
+            - DO NOT compare the user's answer for one question with *any other* question or expected answer. Each is an isolated evaluation.
+            - The explanation MUST explicitly refer to why the user's answer *precisely matches or unequivocally fails to precisely match* the specific question and its expected answer. For 'Incorrect' answers, clearly state what makes it fall short of the specific question's requirements, referring to the discrepancy with the expected answer or the story's specific details for *that question*.
+
+            **Story:**
+            \"\"\"" . $story . "\"\"\"\n\n";
             
-            // Tambahkan pertanyaan dan jawaban pengguna ke prompt
+            $analysisSections = []; // To build sections for each question evaluation
+
+            // Iterate through each question and its corresponding user answer to build distinct evaluation blocks
             foreach ($questions as $index => $q) {
-                $prompt .= ($index + 1) . ". Pertanyaan: " . $q['question'] . "\n";
-                $prompt .= "   Jawaban Pengguna: " . (isset($userAnswers[$index]) ? $userAnswers[$index] : 'Tidak ada jawaban yang diberikan') . "\n";
-                $prompt .= "   Jawaban yang Diharapkan: " . (isset($q['key_answer']) ? $q['key_answer'] : 'N/A') . "\n"; // Sangat penting bagi AI untuk referensi
+                $questionNumber = $index + 1;
+                $userAnswer = isset($userAnswers[$index]) ? $userAnswers[$index] : 'No answer provided';
+                $keyAnswer = isset($q['key_answer']) ? $q['key_answer'] : 'N/A';
+
+                // Append a distinct evaluation block for each question
+                $analysisSections[] = "
+                ### Evaluation for Question " . $questionNumber . ":
+                - **Question:** " . $q['question'] . "
+                - **User Answer:** " . $userAnswer . "
+                - **Expected Answer:** " . $keyAnswer . "
+                "; 
             }
-            $prompt .= "\nAnalisis (array JSON objek, masing-masing dengan properti 'question_number', 'status', dan 'explanation'):";
+
+            // Combine all analysis sections into the main prompt
+            $prompt .= implode("\n", $analysisSections);
+
+            // Add the final instruction for the desired JSON format
+            $prompt .= "\nPlease provide your analysis results in a JSON array of objects, where each object represents the analysis for one question and has 'question_number', 'status', and 'explanation' properties. Example: [{'question_number': 1, 'status': 'Correct', 'explanation': '...'}]";
 
 
             $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/{$this->geminiModel}:generateContent?key={$this->geminiApiKey}", [
@@ -163,9 +179,9 @@ class MateriController extends Controller
                     ],
                 ],
                 'generationConfig' => [
-                    'temperature' => 0.2, // Suhu lebih rendah untuk respons yang lebih faktual dan tidak terlalu kreatif
+                    'temperature' => 0.1, // Lower temperature for stricter, more factual responses
                     'maxOutputTokens' => 700,
-                    'responseMimeType' => 'application/json', // Minta respons JSON
+                    'responseMimeType' => 'application/json', // Request JSON response
                 ],
             ]);
 
@@ -176,6 +192,7 @@ class MateriController extends Controller
                 
                 if (isset($generatedContent['parts'][0]['text'])) {
                     $jsonString = $generatedContent['parts'][0]['text'];
+                    // Remove Markdown code block delimiters if AI added them
                     $jsonString = trim($jsonString, "```json\n");
                     $jsonString = trim($jsonString, "```\n");
                     
@@ -183,23 +200,25 @@ class MateriController extends Controller
                     if (json_last_error() === JSON_ERROR_NONE && is_array($parsedAnalysis)) {
                         $analysisResult = $parsedAnalysis;
                     } else {
-                        Log::error('Gagal mengurai JSON analisis dari Gemini.', ['jsonString' => $jsonString, 'json_last_error' => json_last_error_msg()]);
-                        $analysisResult = "Gagal mengurai analisis dari AI. (Respons JSON tidak valid)";
+                        Log::error('Failed to parse analysis JSON from Gemini.', ['jsonString' => $jsonString, 'json_last_error' => json_last_error_msg()]);
+                        $analysisResult = "Failed to parse analysis from AI. (Invalid JSON response)";
                     }
                 } else {
-                    Log::warning('Gemini API tidak mengembalikan konten teks untuk analisis.', $responseData);
-                    $analysisResult = "AI tidak menghasilkan teks untuk analisis.";
+                    Log::warning('Gemini API did not return text content for analysis.', $responseData);
+                    $analysisResult = "AI did not generate text content for analysis.";
                 }
             } else {
-                Log::warning('Gemini API tidak mengembalikan struktur analisis yang diharapkan.', $responseData);
-                $analysisResult = "Struktur respons AI untuk analisis tidak terduga.";
+                Log::warning('Gemini API did not return expected analysis structure.', $responseData);
+                $analysisResult = "AI response structure for analysis was unexpected.";
             }
 
         } catch (\Exception $e) {
-            Log::error('Kesalahan saat memanggil Gemini API untuk analisis: ' . $e->getMessage());
-            $analysisResult = "Kesalahan teknis dalam menganalisis jawaban.";
+            Log::error('Error calling Gemini API for analysis: ' . $e->getMessage());
+            $analysisResult = "Technical error analyzing answers.";
         }
 
         return response()->json(['analysis' => $analysisResult]);
     }
 }
+// Note: The above code is designed to handle the generation of questions and analysis of answers based on a provided story.
+// It includes error handling, logging, and ensures the responses are in a consistent JSON format for frontend consumption.
