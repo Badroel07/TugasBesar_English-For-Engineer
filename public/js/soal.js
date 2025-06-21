@@ -1,3 +1,4 @@
+//MENAMPILKAN ANIMASI LOADING SPINNER SAAT MENGAMBIL DATA CERITA DAN PERTANYAAN
 document.addEventListener('DOMContentLoaded', function() {
     // --- Variabel Global untuk Quiz dan Elemen DOM ---
     const storyInfoElement = document.getElementById('story-info'); 
@@ -19,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return; // Hentikan eksekusi skrip jika elemen penting tidak ada
     }
 
-    // Fungsi untuk memuat cerita dan menghasilkan soal
+    
+// Fungsi untuk memuat cerita dan menghasilkan soal
     async function loadStoryAndQuestions() {
         const storyFileName = storyInfoElement.dataset.storyFile; // storyInfoElement dijamin ada karena cek di atas
 
