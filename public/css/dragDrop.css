@@ -1,0 +1,179 @@
+/* Container untuk seluruh area soal */
+.question-container {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.question-container p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* --- Elemen yang bisa di-drag (Pilihan Jawaban) --- */
+.draggable-options {
+    display: flex;
+    flex-wrap: wrap; /* Untuk mengatur item dalam baris jika terlalu banyak */
+    gap: 10px; /* Jarak antar item */
+    background-color: #eef;
+    border: 1px dashed #bbb;
+    border-radius: 5px;
+    padding: 15px;
+    min-height: 80px; /* Agar ada area terlihat bahkan tanpa item */
+    align-items: center; /* Pusatkan secara vertikal */
+    justify-content: center; /* Pusatkan secara horizontal */
+    margin-bottom: 20px;
+}
+
+.draggable-item {
+    background-color: #007bff; /* Warna biru */
+    color: white;
+    padding: 8px 15px;
+    border-radius: 25px; /* Bentuk kapsul */
+    cursor: grab; /* Menunjukkan bahwa elemen bisa di-drag */
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    user-select: none; /* Mencegah teks terpilih saat di-drag */
+    flex-shrink: 0; /* Mencegah item menyusut */
+}
+
+/* Efek saat item sedang di-drag */
+.draggable-item:active {
+    cursor: grabbing;
+    transform: scale(1.05); /* Sedikit membesar saat di-drag */
+}
+
+/* Gaya untuk item yang sedang di-drag oleh Sortable.js (atau library lain) */
+.sortable-ghost { /* Ini adalah placeholder Sortable.js saat item di-drag */
+    opacity: 0.2;
+    background-color: #cceeff;
+    border: 1px dashed #88bbff;
+}
+
+.sortable-drag { /* Item yang sedang benar-benar di-drag */
+    opacity: 0.9;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Area Drop (Bagian Rumpang) --- */
+.drop-target {
+    display: inline-block; /* Agar bisa berada di tengah teks */
+    min-width: 100px; /* Lebar minimum untuk area drop */
+    min-height: 30px; /* Tinggi minimum agar terlihat */
+    border-bottom: 2px dashed #999; /* Garis bawah putus-putus */
+    padding: 5px 8px;
+    margin: 0 5px;
+    vertical-align: baseline; /* Ubah dari middle ke baseline */
+    text-align: center;
+    font-style: italic;
+    color: #555;
+    background-color: #f0f0f0; /* Latar belakang abu-abu muda */
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    position: relative; /* Tambahkan untuk positioning yang lebih baik */
+    line-height: 1.2; /* Atur line-height untuk konsistensi */
+}
+
+/* Styling khusus untuk drop-target yang kosong */
+.drop-target:empty::before {
+    content: '______';
+    color: #999;
+    font-style: italic;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* Saat drop-target berisi draggable item */
+.drop-target .draggable-item {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    display: inline-block;
+    vertical-align: baseline;
+}
+
+/* Efek saat item di-drag di atas area drop (hover) */
+.drop-target.sortable-dragover { /* Sortable.js menambahkan kelas ini */
+    background-color: #e0f0ff; /* Warna latar saat hover */
+    border-bottom-color: #007bff; /* Garis bawah berubah warna */
+}
+
+/* Gaya untuk jawaban yang benar */
+.drop-target.correct {
+    background-color: #d4edda; /* Hijau muda */
+    border-color: #28a745; /* Hijau tua */
+    color: #155724; /* Teks hijau gelap */
+    font-weight: bold;
+}
+
+/* Gaya untuk jawaban yang salah */
+.drop-target.incorrect {
+    background-color: #f8d7da; /* Merah muda */
+    border-color: #dc3545; /* Merah tua */
+    color: #721c24; /* Teks merah gelap */
+    font-weight: bold;
+}
+
+/* Tombol submit (jika ada) */
+.submit-button {
+    display: block;
+    width: 200px;
+    padding: 12px 20px;
+    margin: 30px auto 0;
+    background-color: #28a745; /* Hijau */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #218838; /* Hijau lebih gelap */
+}
+
+/* Container untuk tombol aksi */
+.quiz-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Gaya untuk tombol reset */
+.reset-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #f0ad4e; /* Oranye */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px; /* Jarak dari tombol submit */
+}
+
+.reset-button:hover {
+    background-color: #ec971f; /* Oranye lebih gelap */
+}
+
+/* Gaya opsional untuk drop-target yang sudah terisi */
+.drop-target.has-content {
+    border-bottom: 2px solid #5cb85c; /* Hijau solid saat ada isinya */
+    background-color: #e6ffe6; /* Latar belakang lebih cerah */
+    color: #333;
+    font-style: normal; /* Hilangkan italic saat ada konten */
+}
+
+/* Sembunyikan placeholder saat ada konten */
+.drop-target.has-content::before {
+    display: none;
+}

@@ -11,3 +11,5 @@
 <script src="{{ asset('js/main.js') }}"></script>
 <script src="{{ asset('js/soal.js') }}"></script>
 <script src="{{ asset('js/loading.js') }}"></script>
+<script src="{{ asset('js/dragDrop.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
