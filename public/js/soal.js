@@ -1,49 +1,51 @@
+// Display loading spinner animation while fetching story and questions data
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Variabel Global untuk Quiz dan Elemen DOM ---
+    // --- Global Variables for Quiz and DOM Elements ---
     const storyInfoElement = document.getElementById('story-info'); 
     const storyContentElement = document.getElementById('story-content'); 
     const storyLoadingSpinner = document.getElementById('story-loading-spinner');
 
     const questionsArea = document.getElementById('questions-area');
-    // questionsContent tidak perlu di sini karena questionsArea akan diisi langsung dengan form
+    // questionsContent is not needed here as questionsArea will be directly populated with the form
     const questionsLoadingSpinner = document.getElementById('questions-loading-spinner');
 
-    let generatedQuestions = []; // Untuk menyimpan soal yang di-generate
+    let generatedQuestions = []; // To store generated questions
 
-    // --- Cek apakah elemen-elemen penting ditemukan ---
+    // --- Check if essential DOM elements are found ---
     if (!storyInfoElement || !storyContentElement || !storyLoadingSpinner || !questionsArea || !questionsLoadingSpinner) {
-        console.error("Salah satu atau lebih elemen DOM penting tidak ditemukan. Pastikan ID HTML sudah benar.");
-        // Anda bisa menampilkan pesan error yang lebih user-friendly di sini
-        if (!storyContentElement) { /* tampilkan pesan error */ }
-        if (!questionsArea) { /* tampilkan pesan error */ }
-        return; // Hentikan eksekusi skrip jika elemen penting tidak ada
+        console.error("One or more essential DOM elements not found. Ensure HTML IDs are correct.");
+        // You could display a more user-friendly error message here
+        if (!storyContentElement) { /* display error message */ }
+        if (!questionsArea) { /* display error message */ }
+        return; // Stop script execution if essential elements are missing
     }
 
-    // Fungsi untuk memuat cerita dan menghasilkan soal
+    
+// Function to load story and generate questions
     async function loadStoryAndQuestions() {
-        const storyFileName = storyInfoElement.dataset.storyFile; // storyInfoElement dijamin ada karena cek di atas
+        const storyFileName = storyInfoElement.dataset.storyFile; // storyInfoElement is guaranteed to exist due to check above
 
         if (!storyFileName) {
-            console.error("Nama file cerita tidak ditemukan di elemen 'story-info'. Pastikan atribut data-story-file ada dan berisi nama file.");
-            questionsArea.innerHTML = '<p class="text-danger">Error: Nama file cerita tidak dapat ditemukan. Mohon hubungi administrator.</p>';
+            console.error("Story file name not found in 'story-info' element. Ensure data-story-file attribute exists and contains a file name.");
+            questionsArea.innerHTML = '<p class="text-danger">Error: Story file name could not be found. Please contact the administrator.</p>';
             return;
         }
 
-        // --- Tampilkan Spinner Cerita dan Sembunyikan Konten Cerita ---
+        // --- Display Story Spinner and Hide Story Content ---
         storyLoadingSpinner.style.display = 'block'; 
         storyContentElement.style.display = 'none';
 
-        // --- Tampilkan Spinner Pertanyaan dan Kosongkan Area Pertanyaan (kecuali spinner) ---
-        // Penting: Jangan kosongkan questionsArea.innerHTML dulu, karena spinner ada di dalamnya.
-        // Cukup pastikan spinner terlihat dan tidak ada konten lain.
+        // --- Display Questions Spinner and Clear Questions Area (except spinner) ---
+        // Important: Do not clear questionsArea.innerHTML immediately, as the spinner is inside it.
+        // Just ensure the spinner is visible and no other content.
         questionsLoadingSpinner.style.display = 'block';
         questionsArea.innerHTML = '<div id="questions-loading-spinner" class="loading-spinner"></div>'; // Re-insert spinner, will be removed later
-        // Note: Cara yang lebih baik adalah dengan menyembunyikan elemen <p id="questions-content">
-        // dan memastikan spinner adalah satu-satunya yang terlihat di questionsArea pada awalnya.
+        // Note: A better way would be to hide the <p id="questions-content"> element
+        // and ensure the spinner is the only thing visible in questionsArea initially.
 
         let story = '';
         try {
-            // Langkah 1: Ambil konten cerita dari backend
+            // Step 1: Fetch story content from the backend
             const storyResponse = await fetch('/get-story-file-content', { 
                 method: 'POST',
                 headers: {
@@ -70,25 +72,25 @@ document.addEventListener('DOMContentLoaded', function() {
             storyContentElement.innerHTML = `<p class="text-danger">Error loading story: ${storyError.message}</p>`;
             questionsArea.innerHTML = `<p class="text-danger">Error loading story content: ${storyError.message}</p>`;
             
-            // Sembunyikan spinner cerita dan tampilkan konten (pesan error)
+            // Hide story spinner and show content (error message)
             storyLoadingSpinner.style.display = 'none';
             storyContentElement.style.display = 'block';
             
-            // Sembunyikan spinner pertanyaan juga jika cerita gagal dimuat
+            // Hide questions spinner as well if story failed to load
             questionsLoadingSpinner.style.display = 'none';
-            // Bersihkan sisa spinner jika ada di questionsArea.innerHTML
+            // Clean up remaining spinner if present in questionsArea.innerHTML
             questionsArea.innerHTML = questionsArea.innerHTML.replace('<div id="questions-loading-spinner" class="loading-spinner"></div>', '');
-            return; // Hentikan eksekusi jika cerita gagal dimuat
+            return; // Stop execution if story failed to load
         } finally {
-            // Pastikan spinner cerita disembunyikan setelah percobaan loading cerita selesai
+            // Ensure story spinner is hidden after story loading attempt is complete
             storyLoadingSpinner.style.display = 'none';
             storyContentElement.style.display = 'block';
         }
 
-        // Lanjutkan dengan menghasilkan pertanyaan hanya jika cerita berhasil dimuat
+        // Continue with question generation only if story loaded successfully
         if (story.length < 50) { 
-            questionsArea.innerHTML = '<p class="text-warning">Cerita terlalu pendek untuk menghasilkan pertanyaan.</p>';
-            questionsLoadingSpinner.style.display = 'none'; // Sembunyikan spinner pertanyaan
+            questionsArea.innerHTML = '<p class="text-warning">Story is too short to generate questions.</p>';
+            questionsLoadingSpinner.style.display = 'none'; // Hide questions spinner
             return;
         }
 
@@ -115,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Backend error generating questions:', data.questions[0].error);
                 } else {
                     generatedQuestions = data.questions; 
-                    displayQuestions(generatedQuestions); // Panggil fungsi untuk menampilkan formulir kuis
+                    displayQuestions(generatedQuestions); // Call function to display quiz form
                 }
             } else {
                 questionsArea.innerHTML = '<p class="text-danger">Failed to load questions. Invalid response format from AI.</p>';
@@ -126,17 +128,17 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading questions:', error);
             questionsArea.innerHTML = `<p class="text-danger">Error generating questions: ${error.message}. Please try refreshing the page.</p>`;
         } finally {
-            // Sembunyikan spinner pertanyaan setelah proses generate selesai (baik sukses atau error)
+            // Hide questions spinner after generation process is complete (success or error)
             questionsLoadingSpinner.style.display = 'none';
         }
     }
 
-    // Fungsi untuk menampilkan soal di halaman
+    // Function to display questions on the page
     function displayQuestions(questions) {
         if (questions.length === 0 || (questions.length > 0 && questions[0].error)) {
-            questionsArea.innerHTML = `<p class="text-danger">Tidak ada pertanyaan untuk ditampilkan atau terjadi kesalahan saat memuat pertanyaan.</p>`;
+            questionsArea.innerHTML = `<p class="text-danger">No questions to display or an error occurred while loading questions.</p>`;
             if (questions.length > 0 && questions[0].error) {
-                questionsArea.innerHTML += `<p class="text-danger">Detail Error: ${questions[0].error}</p>`;
+                questionsArea.innerHTML += `<p class="text-danger">Error Details: ${questions[0].error}</p>`;
             }
             return; 
         }
@@ -153,12 +155,12 @@ document.addEventListener('DOMContentLoaded', function() {
         html += `
             <button type="submit" class="btn btn-primary">Submit Answers</button>
         </form>`;
-        questionsArea.innerHTML = html; // Ini akan mengganti seluruh isi questionsArea
+        questionsArea.innerHTML = html; // This will replace the entire content of questionsArea
 
         document.getElementById('question-form').addEventListener('submit', handleAnswerSubmission);
     }
 
-    // Fungsi untuk menangani submit jawaban dan mengirim ke backend
+    // Function to handle answer submission and send to backend
     async function handleAnswerSubmission(event) {
         event.preventDefault(); 
 
@@ -183,8 +185,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return; 
         }
 
-        // --- Tampilkan Spinner Pertanyaan Saat Analisis Jawaban ---
-        // Sembunyikan formulir dan tampilkan spinner
+        // --- Display Questions Spinner During Answer Analysis ---
+        // Hide the form and display spinner
         questionsArea.innerHTML = '<div id="questions-loading-spinner" class="loading-spinner"></div><p class="text-info mt-3">Analyzing your answers...</p>';
         questionsLoadingSpinner.style.display = 'block';
 
@@ -228,24 +230,30 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error submitting answers:', error);
             questionsArea.innerHTML = `<p class="text-danger">Error submitting answers: ${error.message}. Please try again.</p>`;
         } finally {
-            questionsLoadingSpinner.style.display = 'none'; // Sembunyikan spinner setelah analisis
+            questionsLoadingSpinner.style.display = 'none'; // Hide spinner after analysis
         }
     }
 
-    // Fungsi untuk menampilkan hasil analisis AI
+    // Function to display AI analysis results
     function displayAnalysisResults(analysisResults, userAnswers) {
         let resultsHtml = '<h3>Analysis Result:</h3>';
-        let correctCount = 0;
+        let earnedPoints = 0; // Changed from correctCount to earnedPoints for fractional scoring
         const totalQuestions = generatedQuestions.length; 
 
         analysisResults.forEach(resultItem => {
-            if (resultItem.status && (resultItem.status.toLowerCase().includes('correct') || resultItem.status.toLowerCase().includes('benar'))) {
-                correctCount++;
+            const lowerCaseStatus = resultItem.status ? resultItem.status.toLowerCase() : '';
+            if (lowerCaseStatus === 'correct') {
+                earnedPoints += 1; // 1 point for correct
+            } else if (lowerCaseStatus === 'partially correct') {
+                earnedPoints += 0.5; // 0.5 points for partially correct
             }
         });
-        const score = (totalQuestions > 0) ? (correctCount / totalQuestions) * 100 : 0;
+        
+        // Calculate score based on earned points out of total questions
+        const score = (totalQuestions > 0) ? (earnedPoints / totalQuestions) * 100 : 0;
+        
         resultsHtml += `<h3 class="mb-4">Your Score: ${score.toFixed(2)}%</h3>`;
-        resultsHtml += `<h4 class="mb-4">Correct Answers: ${correctCount} out of ${totalQuestions} questions</h4>`;
+        resultsHtml += `<h4 class="mb-4">Questions Graded: ${earnedPoints} out of ${totalQuestions} questions</h4>`; // Updated text
 
         analysisResults.forEach((resultItem, index) => {
             const originalQuestion = generatedQuestions[index] ? generatedQuestions[index].question : `Question ${index + 1}`;
@@ -257,22 +265,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (resultItem.status) {
                 const lowerCaseStatus = resultItem.status.toLowerCase();
-                if (lowerCaseStatus.includes('correct') || lowerCaseStatus.includes('benar')) {
+                
+                // Use strict equality (===) to ensure the status is an exact match
+                if (lowerCaseStatus === 'correct') { 
                     statusClass = 'text-success';
                     statusIcon = '<i class="fa fa-check-circle"></i>';
                     statusText = 'Correct';
-                } else if (lowerCaseStatus.includes('partially correct') || lowerCaseStatus.includes('sebagian benar')) {
+                } else if (lowerCaseStatus === 'partially correct') { 
                     statusClass = 'text-info';
                     statusIcon = '<i class="fa fa-adjust"></i>';
                     statusText = 'Partially Correct';
-                } else if (lowerCaseStatus.includes('incorrect') || lowerCaseStatus.includes('salah')) {
+                } else if (lowerCaseStatus === 'incorrect') { 
                     statusClass = 'text-danger';
                     statusIcon = '<i class="fa fa-times-circle"></i>';
                     statusText = 'Incorrect';
-                } else if (lowerCaseStatus.includes('tidak relevan') || lowerCaseStatus.includes('irrelevant')) {
+                } else if (lowerCaseStatus === 'irrelevant') { 
                     statusClass = 'text-secondary';
                     statusIcon = '<i class="fa fa-ban"></i>';
                     statusText = 'Irrelevant';
+                } else {
+                    // Fallback for any unexpected status
+                    statusClass = 'text-warning'; 
+                    statusIcon = '<i class="fa fa-question-circle"></i>';
+                    statusText = 'Unknown Status';
                 }
             }
 
@@ -290,10 +305,10 @@ document.addEventListener('DOMContentLoaded', function() {
         questionsArea.innerHTML = resultsHtml;
     }
 
-    // Panggil fungsi utama untuk memuat cerita dan pertanyaan saat halaman dimuat
+    // Call main function to load story and questions when page is loaded
     if (storyInfoElement) {
         setTimeout(() => {
-            loadStoryAndQuestions(); // Panggil fungsi yang sudah digabungkan
+            loadStoryAndQuestions(); // Call the combined function
         }, 100); 
     }
 });
